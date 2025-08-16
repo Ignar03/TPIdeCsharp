@@ -1,0 +1,6 @@
+@TorneosAPI_HostAddress = http://localhost:5055
+
+GET {{TorneosAPI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
