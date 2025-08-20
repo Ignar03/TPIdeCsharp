@@ -15,14 +15,12 @@ namespace TorneosAPI.Adapters
             DataTable respuesta = new();
             try
             {
-                //Con esto recupera la informacion de la vista 
-                string consulta = "SELECT * FROM " + vista;
-                using var comando = new SqlCommand(consulta, conexionBase);//Creamos el comando en la base con la conexion
+                using var comando = new SqlCommand(vista, conexionBase);//Creamos el comando en la base con la conexion
                 comando.CommandType = CommandType.Text;//Notificamos a la base que vamos a enviar
-                
-                SqlDataAdapter Adaptador = new(comando);
+
+                SqlDataAdapter Adaptador = new(comando); // crea un adaptador para poner los resultados de la base
                 conexionBase.Open(); //Abre la conexion (Puede fallar) 
-                Adaptador.Fill(respuesta); //Contacta la base y ejecuta el comando 
+                Adaptador.Fill(respuesta); // ejecuta el select, contacta la base y llena el Datatable con las filas
             }
             catch (Exception ex)
             {
@@ -41,6 +39,32 @@ namespace TorneosAPI.Adapters
                 conexionBase.Close();
             }
             return respuesta;
+        }
+
+        public int EjecutarComando(string com)
+        {
+            using SqlConnection conexionBase = new SqlConnection("Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=TorneosDB;Integrated Security=True;Encrypt=False;TrustServerCertificate=True");
+            DataTable respuesta = new();
+            try
+            {
+                using var comando = new SqlCommand(com, conexionBase); // crea el comando sql
+                comando.CommandType = CommandType.Text; //notifica a la base q vamos a enviar
+
+                conexionBase.Open(); //abrir conexion a la bd
+
+                return comando.ExecuteNonQuery(); // filas afectadas
+            }
+            catch(Exception ex) 
+            {
+                Logger.RegistrarERROR(ex, "Error al ejecutar comando:" +com);
+                return -1;// error
+            }
+            finally
+            {
+                SqlConnection.ClearAllPools();
+                conexionBase.Close();
+            }
+       
         }
     }
 }

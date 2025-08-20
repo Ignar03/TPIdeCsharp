@@ -100,7 +100,7 @@ namespace TorneosAPI.Controllers
         public ActionResult<Torneo> getTorneoId(int id)
         {
             GeneralAdapterSQL consultor = new();
-            DataTable respuesta = consultor.EjecutarVista("SELECT * FROM Torneos WHERE id_torneo = {id}");
+            DataTable respuesta = consultor.EjecutarVista($"SELECT * FROM Torneos WHERE id_torneo = {id}");
 
             if (respuesta.Rows.Count > 0)
             {
@@ -179,7 +179,7 @@ namespace TorneosAPI.Controllers
                 $"id = '{modificarTorneo.id}', nombre_torneo = '{modificarTorneo.nombre_torneo}', " +
                 $"id_region = '{modificarTorneo.id_region}', fecha_inicio = '{modificarTorneo.fecha_inicio:yyyy-MM-dd}', " +
                 $"fecha_fin = '{modificarTorneo.fecha_fin:yyyy-MM-dd}', torneo_activo = '{(modificarTorneo.torneo_activo ? 1 : 0)}'" +
-                $"minimo_medallas = '{modificarTorneo.minimo_medallas}'");
+                $"minimo_medallas = '{modificarTorneo.minimo_medallas}' WHERE id_torneo = {id_torneo}");
             if (respuesta.Rows.Count > 0)
             {
                 if (respuesta.Rows[0][0].ToString()?.Trim() == "ERROR") return Conflict();
@@ -210,7 +210,7 @@ namespace TorneosAPI.Controllers
         public ActionResult<Torneo> deleteTorneo(int id)
         {
             GeneralAdapterSQL consultor = new();
-            DataTable respuesta = consultor.EjecutarVista("DELETE * FROM Torneos WHERE id_torneo = {id} ");
+            DataTable respuesta = consultor.EjecutarComando($"DELETE * FROM Torneos WHERE id_torneo = {id} ");
             if (respuesta.Rows.Count > 0)
             {
                 if (respuesta.Rows[0][0].ToString()?.Trim() == "ERROR") return Conflict();

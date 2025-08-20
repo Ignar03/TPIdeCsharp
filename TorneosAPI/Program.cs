@@ -26,7 +26,6 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
 
 
 builder.Services.AddSwaggerGen(o =>
@@ -36,21 +35,11 @@ o.SwaggerDoc("v1",
     {
         Title = "Prueba API",
         Description = "Una aplicacion simple para mostrar el funcionamiento de las APIs", 
-        Version = "v1",
-        TermsOfService = null,
-        Contact = new OpenApiContact
-        {
-            // Check for optional parameters 
-        },
-        License = new OpenApiLicense
-        {
-            // Optional Example 
-            // Name = "Proprietary", 
-            // Url = new Uri("https://someURLToLicenseInfo.com") 
-        }
-    });
-    o.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory,
-     $"{Assembly.GetExecutingAssembly().GetName().Name}.xml"));
+        Version = "v1"});
+    var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+
+    if (File.Exists(xmlPath)) o.IncludeXmlComments(xmlPath);
 });
 
 var app = builder.Build();
@@ -61,11 +50,12 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI(c =>
     {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Service Manager API V1");
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Prueba API v1");
+        //c.RoutePrefix = string.Empty;//
     });
 }
 
-app.UseCors();
+app.UseCors(CorsRules);
 app.UseHttpsRedirection();
 app.MapControllers();
 app.Run();
