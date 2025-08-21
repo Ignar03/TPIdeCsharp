@@ -1,41 +1,47 @@
-﻿using Microsoft.Data.SqlClient;
-using Microsoft.Extensions.Logging;
+using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Configuration;
 using System.Data;
-using static Azure.Core.HttpHeader;
 using TorneosAPI.Logs;
 
 namespace TorneosAPI.Adapters
 {
     public class GeneralAdapterSQL
     {
+        private readonly string _connectionString;
+
+        public GeneralAdapterSQL()
+        {
+            var config = new ConfigurationBuilder()
+                .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
+                .AddJsonFile("appsettings.json")
+                .AddJsonFile("appsettings.Development.json", optional: true)
+                .Build();
+
+            _connectionString = config.GetConnectionString("DefaultConnection");
+        }
+
         public DataTable EjecutarVista(string vista)
         {
-            //Es necesario ponerlo por fuera para poder usar el bloque finally 
-            using SqlConnection conexionBase = new SqlConnection("Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=TorneosDB;Integrated Security=True;Encrypt=False;TrustServerCertificate=True");
+            using SqlConnection conexionBase = new SqlConnection(_connectionString);
             DataTable respuesta = new();
             try
             {
-                using var comando = new SqlCommand(vista, conexionBase);//Creamos el comando en la base con la conexion
-                comando.CommandType = CommandType.Text;//Notificamos a la base que vamos a enviar
+                using var comando = new SqlCommand(vista, conexionBase);
+                comando.CommandType = CommandType.Text;
 
-                SqlDataAdapter Adaptador = new(comando); // crea un adaptador para poner los resultados de la base
-                conexionBase.Open(); //Abre la conexion (Puede fallar) 
-                Adaptador.Fill(respuesta); // ejecuta el select, contacta la base y llena el Datatable con las filas
+                SqlDataAdapter Adaptador = new(comando);
+                conexionBase.Open();
+                Adaptador.Fill(respuesta);
             }
             catch (Exception ex)
             {
-                //Registramos el error en nuestra carpeta 
                 Logger.RegistrarERROR(ex, "Error al consultar la vista: " + vista);
-                //Esta parte es para devolver un codigo de error al endpoint 
                 respuesta.Columns.Add("RESULTADO");
                 respuesta.Rows.Add("ERROR");
             }
-            //Lo va a ejecutar no importa que parte del codigo realice 
             finally
             {
-                //Limpia cualquier cadena de conexion que tengamos 
                 SqlConnection.ClearAllPools();
-                //Cierra la base de datos siempre 
                 conexionBase.Close();
             }
             return respuesta;
@@ -43,28 +49,25 @@ namespace TorneosAPI.Adapters
 
         public int EjecutarComando(string com)
         {
-            using SqlConnection conexionBase = new SqlConnection("Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=TorneosDB;Integrated Security=True;Encrypt=False;TrustServerCertificate=True");
-            DataTable respuesta = new();
+            using SqlConnection conexionBase = new SqlConnection(_connectionString);
             try
             {
-                using var comando = new SqlCommand(com, conexionBase); // crea el comando sql
-                comando.CommandType = CommandType.Text; //notifica a la base q vamos a enviar
+                using var comando = new SqlCommand(com, conexionBase);
+                comando.CommandType = CommandType.Text;
 
-                conexionBase.Open(); //abrir conexion a la bd
-
-                return comando.ExecuteNonQuery(); // filas afectadas
+                conexionBase.Open();
+                return comando.ExecuteNonQuery();
             }
-            catch(Exception ex) 
+            catch (Exception ex)
             {
-                Logger.RegistrarERROR(ex, "Error al ejecutar comando:" +com);
-                return -1;// error
+                Logger.RegistrarERROR(ex, "Error al ejecutar comando:" + com);
+                return -1;
             }
             finally
             {
                 SqlConnection.ClearAllPools();
                 conexionBase.Close();
             }
-       
         }
     }
 }
